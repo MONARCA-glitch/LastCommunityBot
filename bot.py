@@ -1,41 +1,19 @@
-import logging
-from aiogram import Bot, Dispatcher, types
-from aiogram.utils import executor
-import os
+from flask import Flask
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-logging.basicConfig(level=logging.INFO)
+TOKEN = "INSERISCI_IL_TUO_TOKEN"
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+app = Flask(__name__)
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Bot attivo su Render!")
 
-LANG_BUTTONS = types.InlineKeyboardMarkup(row_width=2)
-LANG_BUTTONS.add(
-    types.InlineKeyboardButton("🇬🇧 English", callback_data="lang_en"),
-    types.InlineKeyboardButton("🇮🇹 Italiano", callback_data="lang_it"),
-    types.InlineKeyboardButton("🇮🇷 فارسی", callback_data="lang_fa"),
-    types.InlineKeyboardButton("🇸🇦 العربية", callback_data="lang_ar"),
-    types.InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
-)
-
-@dp.message_handler(content_types=types.ContentTypes.NEW_CHAT_MEMBERS)
-async def welcome_new_member(message: types.Message):
-    for user in message.new_chat_members:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text="Welcome to the Last Community.\nPlease select your language.",
-            reply_markup=LANG_BUTTONS
-        )
-
-@dp.callback_query_handler(lambda c: c.data.startswith("lang_"))
-async def process_language_choice(callback_query: types.CallbackQuery):
-    lang = callback_query.data.split("_")[1]
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(
-        chat_id=callback_query.message.chat.id,
-        text=f"Language set: {lang.upper()}.\nRules and main menu will be here..."
-    )
+@app.route("/")
+def home():
+    return "Bot attivo"
 
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    application = ApplicationBuilder().token(TOKEN).build()
+    application.add_handler(CommandHandler("start", start))
+    application.run_polling()
