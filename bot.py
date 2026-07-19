@@ -17,3 +17,4 @@ if __name__ == "__main__":
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.run_polling()
+
